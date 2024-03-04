@@ -1,0 +1,51 @@
+// const http = require('http')
+// const { WebsocketServer, WebSocketServer } = require('ws')
+// const express = require('express')
+
+// const url = require('url')
+// const uuidv4 = require('uuid').v4
+
+// const app = express()
+// const server = http.createServer()
+// const port = 3365
+// const wsServer = new WebSocketServer({ server })
+
+// let connections = {} 
+// let users = {}
+
+// app.get('/test', (req, res) => {
+//   res.send('its working')
+// })
+
+// // function handleMessage(bytes, uuid) {
+  
+// // }
+
+// function handleClose(uuid){
+
+// }
+
+
+// wsServer.on('connection', (connection, request) => {
+//   const username = url.parse(request.url, true).query.username
+//   const uuid = uuidv4()
+
+//   console.log(username)
+//   console.log(uuid)
+
+//   connections[uuid] = connection 
+//   users[uuid] = {
+//     username: username, 
+//     state: {
+//       timer: 0
+//     }
+//   }
+
+//   // connection.on('message', message => handleMessage(message, uuid))
+//   connection.on('close', () => handleClose(uuid))
+
+// })
+
+// server.listen(port,() => {
+//   console.log(`listening on port ${port}`)
+// }) 

@@ -1,27 +1,53 @@
-
 const express = require('express')
-const app = express()
-const port = 3365
+const http = require('http')
+const cors = require('cors') 
+const { Server } = require('socket.io')
 
-app.use(express.static('client'))
+const app = express()
+const server = http.createServer(app)
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ['GET', 'POST']
+
+  }
+})
+
+const port = 3365
 
 let time = 0
 
-function timer (seconds){
-  const updateTime = () => time = timer
-  for (let timer = seconds*1000; timer !== 0; timer = timer - 1000) {
-    setInterval(updateTime, 1000)
-    console.log(time)
-  }
-}
+// const timer = setInterval(() => {
+//   time = time - 1000
+//   console.log(time)
+// },1000)
 
-timer(5)
+// setTimeout(() => {
+//   clearInterval(timer)
+// },time)
 
-app.get('/test', (req, res) => {
-  res.send('its working')
+app.use(cors());
+
+io.on('connection', (socket) => {
+  console.log(`user connected: ${socket.id}`)
+
+  socket.on('start_timer', (data) => {
+    time = data
+    const timer = setInterval(() => {
+      time = time - 1000
+      console.log(time)
+      socket.broadcast.emit('recieve_time', time)
+    },1000)
+    
+    setTimeout(() => {
+      clearInterval(timer)
+      time = 0
+      socket.broadcast.emit('recieve_time', time)
+    },time)
+  })
+  
 })
 
-
-app.listen(port,() => {
+server.listen(port,() => {
   console.log(`listening on port ${port}`)
-})
+})  
