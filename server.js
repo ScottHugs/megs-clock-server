@@ -10,7 +10,12 @@ const io = new Server(server, {
     origin: "http://localhost:5173",
     methods: ['GET', 'POST']
 
+  },
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2*60*1000,
+    skipMiddlewares: true
   }
+
 })
 
 const port = 3365
@@ -32,21 +37,40 @@ io.on('connection', (socket) => {
       users: [socket.id]
     }
     console.log(roomDetails)
-    console.log(setupOptions.key)
-    console.log(setupOptions.time)
-    io.to(setupOptions.key).emit('recieve_time', setupOptions.time*1000)
+    io.to(setupOptions.key).emit('recieve_time', setupOptions.time)
   })
   
 
-  // socket.on('join_room', (roomKey) => {
-  //   socket.join(roomKey)
-  //   console.log(`joined ${roomKey}`)
-  // })
+  socket.on('join_room', (roomKey) => {
+    socket.join(roomKey)
+    socket.emit('recieve_time', roomDetails[roomKey].time)
+    socket.emit('set_session_name', roomDetails[roomKey].name)
+    console.log(`joined ${roomKey}`)
+  })
 
   socket.on('start_timer', (roomKey) => {
-    console.log('starting timer')
-    startTimer(roomDetails[roomKey].time*1000, roomKey) // timesing by 1000 for to get seconds for dev 
+    console.log(roomDetails[roomKey])
+    let timer = startTimer(roomDetails[roomKey].time, roomKey)
+    socket.once('stop_timer', () => {
+      clearInterval(timer)
+    })
   })
+
+  socket.on('start_new_timer', (time, roomKey) => {
+    if (time > 0) {
+      let timer = startTimer(time, roomKey) 
+      socket.once('stop_timer', () => {
+        clearInterval(timer)
+      })
+    }
+  })
+
+  socket.on('update_time', (time, roomKey) => {
+    io.to(roomKey).emit('recieve_time', time)
+  })
+
+
+  console.log(io.engine.clientsCount)
   
 })
 
@@ -61,11 +85,16 @@ function startTimer(milliseconds, roomKey){
       time = time - 1000
       console.log(time)
       io.to(roomKey).emit('recieve_time', time)
+      if (time === 0){
+        clearInterval(timer)
+      }
     },1000)
     
-    setTimeout(() => {
-      clearInterval(timer)
-      time = 0
-      io.to(roomKey).emit('recieve_time', time)
-    },time)
+    // setTimeout(() => {
+    //   clearInterval(timer)
+    //   time = 0
+    //   io.to(roomKey).emit('recieve_time', time)
+    // },time)
+  
+  return timer
 }
