@@ -56,11 +56,13 @@ io.on('connection', (socket) => {
   })
 
   socket.on('start_timer', (roomKey) => {
-    io.to(roomKey).emit('is_round_in_progress', true)
-    let timer = startTimer(roomDetails[roomKey].time, roomKey)
-    socket.once('stop_timer', () => {
-      clearInterval(timer)
-    })
+    if (roomDetails[roomKey].time > 0){
+      io.to(roomKey).emit('is_round_in_progress', true)
+      let timer = startTimer(roomDetails[roomKey].time, roomKey)
+      socket.once('stop_timer', () => {
+        clearInterval(timer)
+      })
+    }
   })
 
   socket.on('start_new_timer', (time, roomKey) => {
