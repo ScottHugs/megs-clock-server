@@ -34,6 +34,8 @@ io.on('connection', (socket) => {
     roomDetails[setupOptions.key] = {
       name: setupOptions.name,
       time: setupOptions.time,
+      rounds: setupOptions.rounds,
+      currentround: 1,
       users: [socket.id]
     }
     console.log(roomDetails)
@@ -43,13 +45,22 @@ io.on('connection', (socket) => {
 
   socket.on('join_room', (roomKey) => {
     socket.join(roomKey)
+
+    roomDetails[roomKey].users.push(socket.id)
+
     socket.emit('recieve_time', roomDetails[roomKey].time)
     socket.emit('set_session_name', roomDetails[roomKey].name)
+    
+    if (roomDetails[roomKey].rounds > 1) {
+      socket.emit('set_round', roomDetails[roomKey].currentround)
+    }
+
     console.log(`joined ${roomKey}`)
   })
 
   socket.on('start_timer', (roomKey) => {
     console.log(roomDetails[roomKey])
+    io.to(roomKey).emit('is_round_in_progress', true)
     let timer = startTimer(roomDetails[roomKey].time, roomKey)
     socket.once('stop_timer', () => {
       clearInterval(timer)
@@ -67,6 +78,13 @@ io.on('connection', (socket) => {
 
   socket.on('update_time', (time, roomKey) => {
     io.to(roomKey).emit('recieve_time', time)
+  })
+
+  socket.on('next_round', (roomKey) => {
+    roomDetails[roomKey].currentround ++
+    io.to(roomKey).emit('recieve_time', roomDetails[roomKey].time)
+    io.to(roomKey).emit('set_round', roomDetails[roomKey].currentround)
+    io.to(roomKey).emit('is_round_in_progress', false)
   })
 
 
