@@ -87,8 +87,15 @@ io.on('connection', (socket) => {
     io.to(roomKey).emit('is_round_in_progress', false)
   })
 
+  socket.on('end_session', (roomKey) => {
+    io.to(roomKey).emit('session_ended', roomDetails[roomKey].name)
+    io.in(roomKey).socketsLeave(roomKey)
+    delete roomDetails[roomKey]
+  })
+
 
   console.log(io.engine.clientsCount)
+  console.log(io.of("/").sockets.size)
   
 })
 
